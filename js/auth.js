@@ -144,8 +144,17 @@ const AuthUI = {
   injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
+    /* ── Ẩn VĨNH VIỄN các nút đăng nhập/đăng ký gốc trong HTML ── */
+    /* Thay thế hoàn toàn bằng các nút do auth.js inject */
+    .btn-login,
+    .btn-register,
+    .btn-white,
+    a[href="/login"],
+    .header-account { display:none !important; }
+
+    /* ── Auth Overlay ── */
     #_auth_overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99998;align-items:center;justify-content:center;backdrop-filter:blur(5px)}
-    ._auth_box{background:#fff;border-radius:10px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;animation:authIn .3s ease;overflow:hidden}
+    ._auth_box{background:#fff;border-radius:10px;width:calc(100% - 32px);max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3);position:relative;animation:authIn .3s ease;overflow:hidden}
     @keyframes authIn{from{transform:translateY(-24px) scale(0.95);opacity:0}to{transform:none;opacity:1}}
     ._auth_box_header{background:linear-gradient(135deg,#8e1a0e,#c0392b);padding:22px 28px;color:white;display:flex;align-items:center;gap:12px}
     ._auth_box_header img{height:44px;border-radius:4px;background:white;padding:3px}
@@ -156,29 +165,75 @@ const AuthUI = {
     ._auth_close:hover{color:white}
     ._fg{margin-bottom:14px}
     ._fg label{display:block;font-size:12px;font-weight:700;color:#444;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.3px}
-    ._fg input{width:100%;height:42px;border:1.5px solid #ddd;border-radius:6px;padding:0 12px;font-size:14px;font-family:inherit;outline:none;transition:all .2s;background:#fafafa}
+    ._fg input{width:100%;height:42px;border:1.5px solid #ddd;border-radius:6px;padding:0 12px;font-size:16px;font-family:inherit;outline:none;transition:all .2s;background:#fafafa}
     ._fg input:focus{border-color:#c0392b;box-shadow:0 0 0 3px rgba(192,57,43,.1);background:#fff}
-    ._auth_submit{width:100%;height:44px;background:linear-gradient(135deg,#8e1a0e,#c0392b);color:white;border:none;border-radius:7px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;transition:all .2s;letter-spacing:0.3px}
+    ._auth_submit{width:100%;height:46px;background:linear-gradient(135deg,#8e1a0e,#c0392b);color:white;border:none;border-radius:7px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px;transition:all .2s;letter-spacing:0.3px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
     ._auth_submit:hover:not(:disabled){opacity:.92;transform:translateY(-1px);box-shadow:0 4px 16px rgba(192,57,43,.3)}
+    ._auth_submit:active:not(:disabled){opacity:.85;transform:scale(.98)}
     ._auth_submit:disabled{opacity:.6;cursor:not-allowed}
     ._auth_err{color:#c0392b;font-size:13px;min-height:18px;margin-top:10px;text-align:center}
     ._auth_switch{text-align:center;margin-top:16px;font-size:13px;color:#777;padding-bottom:4px}
     ._auth_switch a{color:#c0392b;cursor:pointer;font-weight:600;text-decoration:none}
     ._auth_switch a:hover{text-decoration:underline}
     ._fg .hint{font-size:11px;color:#aaa;margin-top:4px}
-    /* Header buttons - trang nghiêm */
-    #_auth_header_wrap{position:fixed;top:10px;right:14px;z-index:9999;display:flex;align-items:center;gap:8px}
-    #_btn_login{padding:7px 18px;border-radius:5px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid #8e1a0e;background:transparent;color:#8e1a0e;font-family:inherit;transition:all .2s;letter-spacing:0.2px}
-    #_btn_login:hover{background:#8e1a0e;color:white}
-    #_btn_register{padding:7px 18px;border-radius:5px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid #8e1a0e;background:#8e1a0e;color:white;font-family:inherit;transition:all .2s;letter-spacing:0.2px}
-    #_btn_register:hover{background:#c0392b;border-color:#c0392b}
-    #_btn_admin{padding:7px 16px;border-radius:5px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid #27ae60;background:#27ae60;color:white;font-family:inherit;transition:all .2s;display:none;align-items:center;gap:5px}
+
+    /* ── Header auth buttons (desktop) ── */
+    #_auth_header_wrap{
+      position:fixed;top:10px;right:14px;z-index:99990;
+      display:flex;align-items:center;gap:6px;
+    }
+    #_btn_login{
+      padding:7px 16px;border-radius:5px;font-size:13px;font-weight:700;
+      cursor:pointer;border:2px solid #8e1a0e;background:white;color:#8e1a0e;
+      font-family:inherit;transition:all .2s;letter-spacing:0.2px;
+      -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+    }
+    #_btn_login:hover,#_btn_login:active{background:#8e1a0e;color:white}
+    #_btn_register{
+      padding:7px 16px;border-radius:5px;font-size:13px;font-weight:700;
+      cursor:pointer;border:2px solid #8e1a0e;background:#8e1a0e;color:white;
+      font-family:inherit;transition:all .2s;letter-spacing:0.2px;
+      -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+    }
+    #_btn_register:hover,#_btn_register:active{background:#c0392b;border-color:#c0392b}
+    #_btn_admin{
+      padding:7px 14px;border-radius:5px;font-size:13px;font-weight:700;
+      cursor:pointer;border:2px solid #27ae60;background:#27ae60;color:white;
+      font-family:inherit;transition:all .2s;display:none;align-items:center;gap:5px;
+    }
     #_btn_admin:hover{background:#229954}
-    #_user_info{display:none;align-items:center;gap:10px;background:rgba(255,255,255,0.95);border:1.5px solid #ddd;padding:5px 14px;border-radius:6px;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
-    #_username{font-weight:700;color:#8e1a0e;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    #_btn_logout{background:none;border:none;color:#999;font-size:13px;cursor:pointer;font-family:inherit;padding:0}
-    #_btn_logout:hover{color:#c0392b}
+    #_user_info{
+      display:none;align-items:center;gap:8px;
+      background:rgba(255,255,255,0.97);border:1.5px solid #ddd;
+      padding:5px 12px;border-radius:6px;font-size:13px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.12);
+    }
+    #_username{font-weight:700;color:#8e1a0e;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    #_btn_logout{background:none;border:none;color:#999;font-size:13px;cursor:pointer;font-family:inherit;padding:0;-webkit-tap-highlight-color:transparent}
+    #_btn_logout:hover,#_btn_logout:active{color:#c0392b}
     ._divider{height:1px;background:#f0f0f0;margin:6px 0}
+
+    /* ── Mobile: thu nhỏ buttons, tránh đè logo ── */
+    @media(max-width:540px){
+      #_auth_header_wrap{
+        top:8px;right:8px;gap:5px;
+      }
+      #_btn_login{
+        padding:5px 11px;font-size:11.5px;border-width:1.5px;
+      }
+      #_btn_register{
+        padding:5px 11px;font-size:11.5px;border-width:1.5px;
+      }
+      #_user_info{
+        padding:4px 10px;font-size:12px;gap:6px;
+      }
+      #_username{max-width:90px;font-size:12px}
+      #_btn_logout{font-size:12px}
+      #_btn_admin{padding:5px 10px;font-size:11.5px}
+      ._auth_box{width:calc(100% - 16px)}
+      ._auth_box_header{padding:16px 20px}
+      ._auth_box_body{padding:18px 20px}
+    }
     `;
     document.head.appendChild(s);
   },
