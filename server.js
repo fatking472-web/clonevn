@@ -35,6 +35,8 @@ app.use('/api/auth',        require('./routes/auth'));
 app.use('/api/users',       require('./routes/users'));
 app.use('/api/submissions', require('./routes/submissions'));
 app.use('/api/vietqr',      require('./routes/vietqr'));
+app.use('/api/webhook',     require('./routes/webhook'));
+app.use('/api/settings',    require('./routes/settings'));
 
 app.get('/api/health', (req, res) => res.json({
   success: true,

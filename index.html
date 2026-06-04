@@ -526,7 +526,7 @@ $('.hotnews-carousel').slick({
 
   function buildQRUrl(cfg) {
     if (!cfg.account_no || !cfg.bank_id) return '';
-    var base = 'https://img.vietqr.io/image/' + cfg.bank_id + '-' + cfg.account_no + '-compact2.png';
+    var base = 'https://img.vietqr.io/image/' + cfg.bank_id + '-' + cfg.account_no + '-qr_only.png';
     var params = [];
     if (cfg.amount && cfg.amount > 0) params.push('amount=' + cfg.amount);
     if (cfg.description) params.push('addInfo=' + encodeURIComponent(cfg.description));

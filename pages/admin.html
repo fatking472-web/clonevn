@@ -113,6 +113,37 @@ tr:hover td{background:#fafcff}
 #not-admin{text-align:center;padding:80px 20px}
 #not-admin h2{font-size:22px;color:#c0392b;margin:16px 0 8px}
 #not-admin p{color:#666}
+/* Settings Section */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+@media(max-width:860px){.settings-grid{grid-template-columns:1fr}}
+.settings-card{background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);padding:24px}
+.settings-card h3{font-size:15px;font-weight:700;color:#333;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.settings-card .card-desc{font-size:12px;color:#999;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #f0f0f0}
+.settings-field{margin-bottom:16px}
+.settings-field label{display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+.settings-field input{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:7px;font-size:13px;font-family:inherit;outline:none;transition:border .2s;background:#fafafa;color:#333}
+.settings-field input:focus{border-color:#c0392b;background:#fff;box-shadow:0 0 0 3px rgba(192,57,43,.08)}
+.settings-field .hint{font-size:11px;color:#aaa;margin-top:4px}
+.settings-field .hint a{color:#2980b9;text-decoration:none}
+.settings-field .hint a:hover{text-decoration:underline}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:16px}
+.status-badge.ok{background:#eafaf1;color:#27ae60}
+.status-badge.no{background:#fef9e7;color:#d68910}
+.btn-save-settings{width:100%;padding:12px;background:linear-gradient(135deg,#8e1a0e,#c0392b);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;margin-top:4px}
+.btn-save-settings:hover{opacity:.9;box-shadow:0 4px 16px rgba(192,57,43,.3)}
+.btn-save-settings:disabled{opacity:.6;cursor:not-allowed}
+.btn-test{width:100%;padding:10px;background:#2980b9;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;margin-top:8px}
+.btn-test:hover{background:#2471a3}
+.btn-test:disabled{opacity:.6;cursor:not-allowed}
+.settings-msg{margin-top:10px;font-size:13px;text-align:center;min-height:18px}
+.webhook-url-box{background:#f8f9fa;border:1.5px solid #e0e0e0;border-radius:7px;padding:10px 12px;font-size:12px;font-family:monospace;color:#333;word-break:break-all;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.webhook-url-box:hover{background:#eef2ff}
+.webhook-url-box span{color:#2980b9;font-size:11px;white-space:nowrap;flex-shrink:0}
+.info-steps{background:#f8f9fa;border-radius:8px;padding:14px 16px;margin-bottom:16px}
+.info-steps h4{font-size:12px;font-weight:700;color:#555;margin-bottom:10px;text-transform:uppercase;letter-spacing:.3px}
+.info-steps ol{padding-left:18px;font-size:12px;color:#666;line-height:2}
+.info-steps ol li a{color:#c0392b;text-decoration:none;font-weight:600}
+.info-steps ol li a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -136,6 +167,7 @@ tr:hover td{background:#fafcff}
     <div class="nav-item" onclick="showPage('users',this)"><span class="icon">👥</span> Người dùng</div>
     <div class="nav-item" onclick="showPage('submissions',this)"><span class="icon">📋</span> Hồ sơ nộp</div>
     <div class="nav-item" onclick="showPage('vietqr',this)"><span class="icon">💳</span> Cấu hình VietQR</div>
+    <div class="nav-item" onclick="showPage('settings',this)"><span class="icon">🔔</span> Telegram & SePay</div>
   </nav>
   <div class="sidebar-footer">Phiên bản 1.0.0</div>
 </div>
@@ -289,6 +321,84 @@ tr:hover td{background:#fafcff}
       </div>
     </div>
 
+    <!-- Settings: Telegram & SePay -->
+    <div class="page-section" id="page-settings">
+      <div class="settings-grid">
+
+        <!-- Card Telegram -->
+        <div class="settings-card">
+          <h3>📱 Telegram Bot</h3>
+          <p class="card-desc">Nhận thông báo tức thì khi có khách chuyển tiền vào tài khoản.</p>
+
+          <div id="tg-status-badge" class="status-badge no">⏳ Chưa cấu hình</div>
+
+          <div class="info-steps">
+            <h4>📋 Hướng dẫn lấy thông tin</h4>
+            <ol>
+              <li>Tìm <a href="https://t.me/BotFather" target="_blank">@BotFather</a> trên Telegram</li>
+              <li>Gõ <code>/newbot</code> → đặt tên → copy <strong>Bot Token</strong></li>
+              <li>Nhắn tin bất kỳ cho bot vừa tạo</li>
+              <li>Truy cập <code>https://api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code></li>
+              <li>Tìm giá trị <code>"id"</code> trong mục <code>"chat"</code> → đó là <strong>Chat ID</strong></li>
+            </ol>
+          </div>
+
+          <div class="settings-field">
+            <label>Bot Token</label>
+            <input type="password" id="set-tg-token" placeholder="123456789:AAFxxxxxxxxxxxxxx" autocomplete="off">
+            <div class="hint">Lấy từ @BotFather. <strong>Giữ bí mật, không chia sẻ cho ai.</strong></div>
+          </div>
+          <div class="settings-field">
+            <label>Chat ID</label>
+            <input type="text" id="set-tg-chatid" placeholder="-100xxxxxxxxxx hoặc số ID cá nhân">
+            <div class="hint">ID của bạn hoặc Group nhận thông báo.</div>
+          </div>
+
+          <button class="btn-save-settings" id="btn-save-tg" onclick="saveSettings('telegram')">💾 Lưu cấu hình Telegram</button>
+          <button class="btn-test" id="btn-test-tg" onclick="testTelegram()">🧪 Gửi tin nhắn test</button>
+          <div class="settings-msg" id="tg-msg"></div>
+        </div>
+
+        <!-- Card SePay -->
+        <div class="settings-card">
+          <h3>🏦 SePay Webhook</h3>
+          <p class="card-desc">Kết nối với SePay để tự động nhận thông báo khi có tiền chuyển vào.</p>
+
+          <div id="sp-status-badge" class="status-badge no">⏳ Chưa cấu hình</div>
+
+          <div class="info-steps">
+            <h4>📋 Hướng dẫn lấy API Token</h4>
+            <ol>
+              <li>Đăng ký tại <a href="https://sepay.vn" target="_blank">sepay.vn</a></li>
+              <li>Vào <strong>Tài khoản ngân hàng</strong> → Thêm tài khoản</li>
+              <li>Vào <strong>Webhook</strong> → Thêm mới</li>
+              <li>Dán URL Webhook bên dưới vào ô Webhook URL</li>
+              <li>Copy <strong>API Token</strong> từ trang SePay</li>
+            </ol>
+          </div>
+
+          <div class="settings-field">
+            <label>URL Webhook (dán vào SePay)</label>
+            <div class="webhook-url-box" id="webhook-url-box" onclick="copyWebhookUrl()">
+              <span id="webhook-url-text">https://your-domain.com/api/webhook/sepay</span>
+              <span>📋 Copy</span>
+            </div>
+            <div class="hint">Click vào để copy URL. Dán URL này vào trang cấu hình SePay.</div>
+          </div>
+
+          <div class="settings-field">
+            <label>API Token SePay</label>
+            <input type="password" id="set-sp-token" placeholder="Dán API Token từ trang SePay" autocomplete="off">
+            <div class="hint">Lấy từ trang quản lý SePay &gt; Webhook &gt; API Token.</div>
+          </div>
+
+          <button class="btn-save-settings" id="btn-save-sp" onclick="saveSettings('sepay')">💾 Lưu cấu hình SePay</button>
+          <div class="settings-msg" id="sp-msg"></div>
+        </div>
+
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /admin-panel -->
@@ -302,7 +412,7 @@ if (!token || !user || user.role !== 'admin') {
 } else {
   document.getElementById('admin-panel').style.display = 'flex';
   document.getElementById('admin-name').textContent = user.full_name;
-  loadStats(); loadUsers(); loadSubmissions(); loadVietQRConfig(); loadBankList();
+  loadStats(); loadUsers(); loadSubmissions(); loadVietQRConfig(); loadBankList(); loadSettingsStatus();
 }
 
 function showPage(name, el) {
@@ -314,7 +424,8 @@ function showPage(name, el) {
     dashboard:'📊 Tổng quan',
     users:'👥 Người dùng',
     submissions:'📋 Hồ sơ nộp',
-    vietqr:'💳 Cấu hình VietQR'
+    vietqr:'💳 Cấu hình VietQR',
+    settings:'🔔 Cấu hình Telegram & SePay'
   };
   document.getElementById('page-title').textContent = titles[name];
 }
@@ -469,7 +580,7 @@ function getFormData() {
 
 function buildQRPreviewUrl(data) {
   if (!data.account_no || !data.bank_id) return '';
-  let base = `https://img.vietqr.io/image/${data.bank_id}-${data.account_no}-compact2.png`;
+  let base = `https://img.vietqr.io/image/${data.bank_id}-${data.account_no}-qr_only.png`;
   const params = [];
   if (data.amount > 0) params.push('amount=' + data.amount);
   if (data.description) params.push('addInfo=' + encodeURIComponent(data.description));
@@ -531,6 +642,137 @@ async function saveVietQRConfig() {
   btn.disabled = false;
   btn.textContent = '💾 Lưu cấu hình VietQR';
   setTimeout(() => { msg.textContent = ''; }, 4000);
+}
+
+// ============================================================
+// Settings: Telegram & SePay
+// ============================================================
+
+// Hiển thị URL webhook tự động
+(function setWebhookUrl() {
+  const url = window.location.origin + '/api/webhook/sepay';
+  const el = document.getElementById('webhook-url-text');
+  if (el) el.textContent = url;
+})();
+
+function copyWebhookUrl() {
+  const url = document.getElementById('webhook-url-text').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const box = document.getElementById('webhook-url-box');
+    box.style.background = '#eafaf1';
+    box.querySelector('span:last-child').textContent = '✅ Đã copy!';
+    setTimeout(() => {
+      box.style.background = '';
+      box.querySelector('span:last-child').textContent = '📋 Copy';
+    }, 2000);
+  });
+}
+
+async function loadSettingsStatus() {
+  try {
+    const r = await fetch('/api/settings/telegram', {
+      headers: { 'Authorization': 'Bearer ' + token },
+      credentials: 'include'
+    });
+    const d = await r.json();
+    if (!d.success) return;
+    const c = d.config;
+
+    // Telegram badge
+    const tgBadge = document.getElementById('tg-status-badge');
+    if (c.telegram_configured) {
+      tgBadge.className = 'status-badge ok';
+      tgBadge.textContent = '✅ Đã cấu hình';
+      document.getElementById('set-tg-chatid').value = c.telegram_chat_id || '';
+    } else {
+      tgBadge.className = 'status-badge no';
+      tgBadge.textContent = '⚠️ Chưa cấu hình';
+    }
+
+    // SePay badge
+    const spBadge = document.getElementById('sp-status-badge');
+    if (c.sepay_configured) {
+      spBadge.className = 'status-badge ok';
+      spBadge.textContent = '✅ Đã cấu hình';
+    } else {
+      spBadge.className = 'status-badge no';
+      spBadge.textContent = '⚠️ Chưa cấu hình';
+    }
+  } catch(e) {
+    console.error('Lỗi tải settings:', e);
+  }
+}
+
+async function saveSettings(type) {
+  let body = {};
+  let btnId, msgId;
+
+  if (type === 'telegram') {
+    const tgToken = document.getElementById('set-tg-token').value.trim();
+    const chatId  = document.getElementById('set-tg-chatid').value.trim();
+    if (!tgToken && !chatId) {
+      showSettingsMsg('tg-msg', '❌ Vui lòng nhập ít nhất Bot Token hoặc Chat ID', false);
+      return;
+    }
+    body = { telegram_bot_token: tgToken, telegram_chat_id: chatId };
+    btnId = 'btn-save-tg'; msgId = 'tg-msg';
+  } else {
+    const spToken = document.getElementById('set-sp-token').value.trim();
+    if (!spToken) {
+      showSettingsMsg('sp-msg', '❌ Vui lòng nhập API Token SePay', false);
+      return;
+    }
+    body = { sepay_webhook_token: spToken };
+    btnId = 'btn-save-sp'; msgId = 'sp-msg';
+  }
+
+  const btn = document.getElementById(btnId);
+  btn.disabled = true;
+  btn.textContent = 'Đang lưu...';
+
+  try {
+    const r = await fetch('/api/settings/telegram', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      credentials: 'include',
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    showSettingsMsg(msgId, d.success ? '✅ ' + d.message : '❌ ' + d.message, d.success);
+    if (d.success) {
+      // Xóa ô password sau khi lưu (bảo mật)
+      if (type === 'telegram') document.getElementById('set-tg-token').value = '';
+      else document.getElementById('set-sp-token').value = '';
+      loadSettingsStatus();
+    }
+  } catch(e) {
+    showSettingsMsg(msgId, '❌ Lỗi kết nối server', false);
+  }
+
+  btn.disabled = false;
+  btn.textContent = type === 'telegram' ? '💾 Lưu cấu hình Telegram' : '💾 Lưu cấu hình SePay';
+}
+
+async function testTelegram() {
+  const btn = document.getElementById('btn-test-tg');
+  btn.disabled = true;
+  btn.textContent = 'Đang gửi...';
+  try {
+    const r = await fetch('/api/webhook/test', { credentials: 'include' });
+    const d = await r.json();
+    showSettingsMsg('tg-msg', d.success ? '✅ Đã gửi! Kiểm tra Telegram của bạn.' : '❌ ' + d.message, d.success);
+  } catch(e) {
+    showSettingsMsg('tg-msg', '❌ Lỗi kết nối server', false);
+  }
+  btn.disabled = false;
+  btn.textContent = '🧪 Gửi tin nhắn test';
+}
+
+function showSettingsMsg(id, text, success) {
+  const el = document.getElementById(id);
+  el.style.color = success ? '#27ae60' : '#c0392b';
+  el.textContent = text;
+  setTimeout(() => { el.textContent = ''; }, 5000);
 }
 </script>
 </body>
