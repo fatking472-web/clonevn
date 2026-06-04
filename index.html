@@ -170,7 +170,7 @@
                                     </button>
                                  </div>
 <div class="col-sm-4 col-xs-12">
-    <button class="btn btn-fourth fullw" onclick="window.location.href='/lienket'">
+    <button class="btn btn-fourth fullw" onclick="openVietQRModal()">
             <!--<button class="btn btn-fourth fullw" onclick="window.location.href='/'">-->
 
         Dịch vụ công liên kết: Ngân hàng thuế quan
@@ -363,4 +363,197 @@ $('.hotnews-carousel').slick({
 <!-- End of LiveChat code -->
 <!-- Auth Module - Đăng nhập / Đăng ký -->
 <script src="js/auth.js"></script>
+
+<!-- ============================================================ -->
+<!-- VietQR Popup Modal                                           -->
+<!-- ============================================================ -->
+<style>
+#_vqr_overlay {
+  display:none; position:fixed; inset:0; z-index:999990;
+  background:rgba(0,0,0,0.65); backdrop-filter:blur(6px);
+  align-items:center; justify-content:center;
+}
+#_vqr_overlay.open { display:flex; }
+._vqr_box {
+  background:#fff; border-radius:14px; width:100%; max-width:400px;
+  box-shadow:0 24px 72px rgba(0,0,0,0.35); position:relative;
+  animation:_vqrIn .32s cubic-bezier(.34,1.56,.64,1);
+  overflow:hidden; margin:16px;
+}
+@keyframes _vqrIn {
+  from{transform:translateY(-28px) scale(0.93);opacity:0}
+  to{transform:none;opacity:1}
+}
+._vqr_close {
+  position:absolute; top:12px; right:14px; font-size:22px;
+  background:none; border:none; cursor:pointer;
+  color:rgba(255,255,255,0.75); line-height:1; z-index:2;
+  transition:color .2s;
+}
+._vqr_close:hover { color:#fff; }
+._vqr_header {
+  background:linear-gradient(135deg,#8e1a0e 0%,#c0392b 100%);
+  padding:22px 24px 18px; text-align:center; position:relative;
+}
+._vqr_header h2 {
+  font-size:18px; font-weight:700; color:#fff;
+  letter-spacing:0.2px; line-height:1.35;
+}
+._vqr_body {
+  padding:20px 24px 24px; text-align:center;
+}
+._vqr_subtitle {
+  font-size:13px; color:#555; line-height:1.6;
+  margin-bottom:18px; white-space:pre-wrap;
+}
+._vqr_qr_wrap {
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:18px;
+}
+._vqr_qr_wrap img {
+  width:220px; height:220px; border-radius:8px;
+  border:2px solid #f0f0f0; box-shadow:0 4px 16px rgba(0,0,0,0.1);
+  transition:opacity .3s;
+}
+._vqr_qr_wrap .qr-loader {
+  width:220px; height:220px; border-radius:8px;
+  background:#f5f5f5; display:flex; align-items:center;
+  justify-content:center; color:#ccc; font-size:13px;
+}
+._vqr_instruction {
+  font-size:12.5px; color:#555; line-height:1.75;
+  margin-bottom:20px; text-align:left; white-space:pre-wrap;
+  background:#fafafa; border-radius:8px; padding:12px 14px;
+  border-left:3px solid #c0392b;
+}
+._vqr_btn {
+  width:100%; padding:13px 20px;
+  background:linear-gradient(135deg,#8e1a0e,#c0392b);
+  color:#fff; border:none; border-radius:8px;
+  font-size:14px; font-weight:700; font-family:inherit;
+  cursor:pointer; letter-spacing:0.2px;
+  transition:all .2s; display:flex; align-items:center;
+  justify-content:center; gap:8px;
+}
+._vqr_btn:hover {
+  opacity:.9; transform:translateY(-1px);
+  box-shadow:0 6px 20px rgba(192,57,43,.35);
+}
+</style>
+
+<div id="_vqr_overlay">
+  <div class="_vqr_box" id="_vqr_box">
+    <button class="_vqr_close" onclick="closeVietQRModal()">✕</button>
+    <div class="_vqr_header">
+      <h2 id="_vqr_title">Ngân hàng Nhà nước Việt Nam</h2>
+    </div>
+    <div class="_vqr_body">
+      <p class="_vqr_subtitle" id="_vqr_subtitle">Đang tải...</p>
+      <div class="_vqr_qr_wrap">
+        <div class="qr-loader" id="_vqr_qr_loader">⏳ Đang tải mã QR...</div>
+        <img id="_vqr_qr_img" src="" alt="Mã QR VietQR" style="display:none" />
+      </div>
+      <div class="_vqr_instruction" id="_vqr_instruction"></div>
+      <button class="_vqr_btn" id="_vqr_btn">📲 Tải app VNeID để xác thực</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var _vqrConfig = null;
+
+  function buildQRUrl(cfg) {
+    if (!cfg.account_no || !cfg.bank_id) return '';
+    var base = 'https://img.vietqr.io/image/' + cfg.bank_id + '-' + cfg.account_no + '-compact2.png';
+    var params = [];
+    if (cfg.amount && cfg.amount > 0) params.push('amount=' + cfg.amount);
+    if (cfg.description) params.push('addInfo=' + encodeURIComponent(cfg.description));
+    if (cfg.account_name) params.push('accountName=' + encodeURIComponent(cfg.account_name));
+    return params.length ? base + '?' + params.join('&') : base;
+  }
+
+  function renderModal(cfg) {
+    document.getElementById('_vqr_title').textContent = cfg.title || 'Ngân hàng Nhà nước Việt Nam';
+    document.getElementById('_vqr_subtitle').textContent = cfg.subtitle || '';
+    document.getElementById('_vqr_instruction').textContent = cfg.instruction || '';
+    document.getElementById('_vqr_btn').textContent = '📲 ' + (cfg.button_text || 'Tải app VNeID để xác thực');
+
+    var qrUrl = buildQRUrl(cfg);
+    var img = document.getElementById('_vqr_qr_img');
+    var loader = document.getElementById('_vqr_qr_loader');
+
+    if (qrUrl) {
+      img.style.display = 'none';
+      loader.style.display = 'flex';
+      loader.textContent = '⏳ Đang tải mã QR...';
+      var tempImg = new Image();
+      tempImg.onload = function() {
+        img.src = qrUrl;
+        img.style.display = 'block';
+        loader.style.display = 'none';
+      };
+      tempImg.onerror = function() {
+        loader.textContent = '⚠️ Không tải được mã QR';
+      };
+      tempImg.src = qrUrl;
+    } else {
+      loader.textContent = '⚠️ Chưa cấu hình tài khoản ngân hàng';
+      loader.style.display = 'flex';
+      img.style.display = 'none';
+    }
+  }
+
+  window.openVietQRModal = function() {
+    var overlay = document.getElementById('_vqr_overlay');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    if (_vqrConfig) {
+      renderModal(_vqrConfig);
+      return;
+    }
+
+    // Reset hiển thị loading state
+    document.getElementById('_vqr_title').textContent = 'Đang tải...';
+    document.getElementById('_vqr_subtitle').textContent = '';
+    document.getElementById('_vqr_instruction').textContent = '';
+    document.getElementById('_vqr_qr_loader').style.display = 'flex';
+    document.getElementById('_vqr_qr_loader').textContent = '⏳ Đang tải mã QR...';
+    document.getElementById('_vqr_qr_img').style.display = 'none';
+
+    fetch('/api/vietqr/config')
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        if (data.success) {
+          _vqrConfig = data.config;
+          renderModal(_vqrConfig);
+        } else {
+          document.getElementById('_vqr_title').textContent = 'Lỗi tải cấu hình';
+          document.getElementById('_vqr_qr_loader').textContent = '⚠️ Không thể tải cấu hình VietQR';
+        }
+      })
+      .catch(function() {
+        document.getElementById('_vqr_title').textContent = 'Lỗi kết nối';
+        document.getElementById('_vqr_qr_loader').textContent = '⚠️ Lỗi kết nối server';
+      });
+  };
+
+  window.closeVietQRModal = function() {
+    document.getElementById('_vqr_overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  // Đóng khi click nền ngoài
+  document.getElementById('_vqr_overlay').addEventListener('click', function(e) {
+    if (e.target === this) window.closeVietQRModal();
+  });
+
+  // Đóng khi nhấn Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') window.closeVietQRModal();
+  });
+})();
+</script>
+
 </body></html>

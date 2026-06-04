@@ -52,6 +52,38 @@ db.exec(`
   );
 `);
 
+// Bảng cấu hình VietQR (chỉ 1 dòng duy nhất id=1)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS vietqr_config (
+    id          INTEGER PRIMARY KEY CHECK(id = 1),
+    bank_id     TEXT    DEFAULT 'vcb',
+    bank_name   TEXT    DEFAULT 'Vietcombank',
+    account_no  TEXT    DEFAULT '',
+    account_name TEXT   DEFAULT '',
+    amount      INTEGER DEFAULT 0,
+    description TEXT    DEFAULT 'Thanh toan phi dich vu',
+    title       TEXT    DEFAULT 'Ngân hàng Nhà nước Việt Nam',
+    subtitle    TEXT    DEFAULT 'Kết nối tài khoản ngân hàng với CCCD gắn chip để xác thực danh tính và sử dụng dịch vụ ngân hàng số.',
+    instruction TEXT    DEFAULT 'Mở ứng dụng tương ứng trên điện thoại → Chọn "Quét mã QR" → Quét mã trên để kết nối dịch vụ hoặc sử dụng app VNeID để xác thực CCCD',
+    button_text TEXT    DEFAULT 'Tải app VNeID để xác thực',
+    api_key     TEXT    DEFAULT ''
+  );
+`);
+
+// Chèn cấu hình mặc định nếu chưa có
+const vietqrExists = db.prepare('SELECT id FROM vietqr_config WHERE id = 1').get();
+if (!vietqrExists) {
+  db.prepare(`
+    INSERT INTO vietqr_config (id, bank_id, bank_name, account_no, account_name, amount, description, title, subtitle, instruction, button_text)
+    VALUES (1, 'vcb', 'Vietcombank', '', '', 0, 'Thanh toan phi dich vu',
+      'Ngân hàng Nhà nước Việt Nam',
+      'Kết nối tài khoản ngân hàng với CCCD gắn chip để xác thực danh tính và sử dụng dịch vụ ngân hàng số.',
+      'Mở ứng dụng tương ứng trên điện thoại → Chọn "Quét mã QR" → Quét mã trên để kết nối dịch vụ hoặc sử dụng app VNeID để xác thực CCCD',
+      'Tải app VNeID để xác thực')
+  `).run();
+  console.log('✅ Tạo cấu hình VietQR mặc định');
+}
+
 // Thêm tài khoản admin mặc định nếu chưa có
 const bcrypt = require('bcryptjs');
 const adminExists = db.prepare("SELECT id FROM users WHERE cccd = '000000000000' AND role = 'admin'").get();

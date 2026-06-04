@@ -60,6 +60,35 @@ tr:hover td{background:#fafcff}
   .sidebar{display:none}
   .stats-row{grid-template-columns:1fr 1fr}
 }
+/* VietQR Section */
+.vqr-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.vqr-card{background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);padding:24px}
+.vqr-card h3{font-size:15px;font-weight:700;color:#333;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid #f0f0f0}
+.vqr-field{margin-bottom:16px}
+.vqr-field label{display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.3px}
+.vqr-field input,.vqr-field textarea,.vqr-field select{width:100%;padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:7px;font-size:13px;font-family:inherit;outline:none;transition:border .2s;background:#fafafa;color:#333}
+.vqr-field textarea{resize:vertical;min-height:68px;line-height:1.5}
+.vqr-field input:focus,.vqr-field textarea:focus,.vqr-field select:focus{border-color:#c0392b;background:#fff;box-shadow:0 0 0 3px rgba(192,57,43,.08)}
+.vqr-field .hint{font-size:11px;color:#aaa;margin-top:4px}
+.btn-save-vqr{width:100%;padding:12px;background:linear-gradient(135deg,#8e1a0e,#c0392b);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;margin-top:6px}
+.btn-save-vqr:hover{opacity:.9;box-shadow:0 4px 16px rgba(192,57,43,.3)}
+.btn-save-vqr:disabled{opacity:.6;cursor:not-allowed}
+/* Preview Popup */
+.vqr-preview-label{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px}
+.vqr-preview-popup{background:#fff;border-radius:12px;border:1.5px solid #e8e8e8;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.1)}
+.vqr-preview-header{background:linear-gradient(135deg,#8e1a0e,#c0392b);padding:16px 18px;text-align:center}
+.vqr-preview-header h4{font-size:14px;font-weight:700;color:#fff;line-height:1.4}
+.vqr-preview-body{padding:16px 18px;text-align:center}
+.vqr-preview-sub{font-size:11.5px;color:#555;line-height:1.6;margin-bottom:12px;white-space:pre-wrap}
+.vqr-preview-qr{display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.vqr-preview-qr img{width:160px;height:160px;border-radius:6px;border:1.5px solid #eee}
+.vqr-preview-qr .no-qr{width:160px;height:160px;border-radius:6px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:12px;flex-direction:column;gap:6px;border:1.5px solid #eee}
+.vqr-preview-instr{font-size:11px;color:#555;line-height:1.65;text-align:left;background:#fafafa;border-radius:6px;padding:10px 12px;border-left:3px solid #c0392b;margin-bottom:12px;white-space:pre-wrap}
+.vqr-preview-btn{width:100%;padding:10px;background:linear-gradient(135deg,#8e1a0e,#c0392b);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:default}
+.vqr-bank-select-wrap{position:relative}
+.vqr-bank-option{display:flex;align-items:center;gap:8px}
+.vqr-bank-logo{width:22px;height:22px;border-radius:4px;object-fit:contain}
+@media(max-width:900px){.vqr-layout{grid-template-columns:1fr}}
 #not-admin{text-align:center;padding:80px 20px}
 #not-admin h2{font-size:22px;color:#c0392b;margin:16px 0 8px}
 #not-admin p{color:#666}
@@ -85,6 +114,7 @@ tr:hover td{background:#fafcff}
     <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span> Tổng quan</div>
     <div class="nav-item" onclick="showPage('users',this)"><span class="icon">👥</span> Người dùng</div>
     <div class="nav-item" onclick="showPage('submissions',this)"><span class="icon">📋</span> Hồ sơ nộp</div>
+    <div class="nav-item" onclick="showPage('vietqr',this)"><span class="icon">💳</span> Cấu hình VietQR</div>
   </nav>
   <div class="sidebar-footer">Phiên bản 1.0.0</div>
 </div>
@@ -156,6 +186,88 @@ tr:hover td{background:#fafcff}
       </div>
     </div>
 
+    <!-- VietQR Config -->
+    <div class="page-section" id="page-vietqr">
+      <div class="vqr-layout">
+        <!-- Cột trái: Form cấu hình -->
+        <div class="vqr-card">
+          <h3>💳 Thông tin ngân hàng & QR</h3>
+          <div class="vqr-field">
+            <label>Ngân hàng *</label>
+            <select id="vqr-bank" onchange="onVqrFieldChange()">
+              <option value="">-- Đang tải danh sách... --</option>
+            </select>
+          </div>
+          <div class="vqr-field">
+            <label>Số tài khoản *</label>
+            <input type="text" id="vqr-account-no" placeholder="Nhập số tài khoản" oninput="onVqrFieldChange()">
+          </div>
+          <div class="vqr-field">
+            <label>Tên chủ tài khoản *</label>
+            <input type="text" id="vqr-account-name" placeholder="VD: NGUYEN VAN A" oninput="onVqrFieldChange()">
+            <div class="hint">Viết HOA không dấu</div>
+          </div>
+          <div class="vqr-field">
+            <label>Số tiền (VND)</label>
+            <input type="number" id="vqr-amount" placeholder="Để trống nếu không cố định" min="0" oninput="onVqrFieldChange()">
+          </div>
+          <div class="vqr-field">
+            <label>Nội dung thanh toán</label>
+            <input type="text" id="vqr-description" placeholder="Nội dung chuyển khoản" oninput="onVqrFieldChange()">
+            <div class="hint">Không dấu, tối đa 25 ký tự</div>
+          </div>
+          <hr style="border:none;border-top:1px solid #f0f0f0;margin:20px 0">
+          <h3 style="font-size:14px;color:#555;border:none;padding:0;margin-bottom:16px">✏️ Nội dung hiển thị trên popup</h3>
+          <div class="vqr-field">
+            <label>Tiêu đề popup</label>
+            <input type="text" id="vqr-title" placeholder="Ngân hàng Nhà nước Việt Nam" oninput="onVqrFieldChange()">
+          </div>
+          <div class="vqr-field">
+            <label>Phụ đề (dưới tiêu đề)</label>
+            <textarea id="vqr-subtitle" rows="3" placeholder="Kết nối tài khoản ngân hàng với CCCD..." oninput="onVqrFieldChange()"></textarea>
+          </div>
+          <div class="vqr-field">
+            <label>Hướng dẫn quét mã</label>
+            <textarea id="vqr-instruction" rows="4" placeholder="Mở ứng dụng... → Chọn Quét QR..." oninput="onVqrFieldChange()"></textarea>
+          </div>
+          <div class="vqr-field">
+            <label>Chữ trên nút bấm</label>
+            <input type="text" id="vqr-button-text" placeholder="Tải app VNeID để xác thực" oninput="onVqrFieldChange()">
+          </div>
+          <div class="vqr-field">
+            <label>API Key (tùy chọn)</label>
+            <input type="text" id="vqr-api-key" placeholder="Dự phòng cho dịch vụ nâng cao">
+            <div class="hint">Không bắt buộc. Dùng khi tích hợp VietQR API nâng cao.</div>
+          </div>
+          <button class="btn-save-vqr" id="btn-save-vqr" onclick="saveVietQRConfig()">&#128190; Lưu cấu hình VietQR</button>
+          <div id="vqr-save-msg" style="margin-top:10px;font-size:13px;text-align:center;min-height:18px"></div>
+        </div>
+
+        <!-- Cột phải: Preview -->
+        <div class="vqr-card">
+          <h3>👁️ Xem trước popup</h3>
+          <p class="vqr-preview-label">Hiển thị sẽ xuất hiện khi người dùng nhấn nút trên trang chủ</p>
+          <div class="vqr-preview-popup">
+            <div class="vqr-preview-header">
+              <h4 id="prev-title">Ngân hàng Nhà nước Việt Nam</h4>
+            </div>
+            <div class="vqr-preview-body">
+              <p class="vqr-preview-sub" id="prev-subtitle"></p>
+              <div class="vqr-preview-qr">
+                <div class="no-qr" id="prev-no-qr">
+                  <span style="font-size:28px">📷</span>
+                  <span>Nhập thông tin để tạo QR</span>
+                </div>
+                <img id="prev-qr-img" src="" alt="QR Preview" style="display:none">
+              </div>
+              <div class="vqr-preview-instr" id="prev-instruction"></div>
+              <button class="vqr-preview-btn" id="prev-btn">📲 Tải app VNeID để xác thực</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 </div><!-- /main -->
 </div><!-- /admin-panel -->
@@ -169,7 +281,7 @@ if (!token || !user || user.role !== 'admin') {
 } else {
   document.getElementById('admin-panel').style.display = 'flex';
   document.getElementById('admin-name').textContent = user.full_name;
-  loadStats(); loadUsers(); loadSubmissions();
+  loadStats(); loadUsers(); loadSubmissions(); loadVietQRConfig(); loadBankList();
 }
 
 function showPage(name, el) {
@@ -177,7 +289,12 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   el.classList.add('active');
-  const titles = {dashboard:'📊 Tổng quan',users:'👥 Người dùng',submissions:'📋 Hồ sơ nộp'};
+  const titles = {
+    dashboard:'📊 Tổng quan',
+    users:'👥 Người dùng',
+    submissions:'📋 Hồ sơ nộp',
+    vietqr:'💳 Cấu hình VietQR'
+  };
   document.getElementById('page-title').textContent = titles[name];
 }
 
@@ -263,6 +380,136 @@ async function logout() {
   localStorage.removeItem('cdvc_token');
   localStorage.removeItem('cdvc_user');
   window.location.href = '/';
+}
+
+// ============================================================
+// VietQR Config
+// ============================================================
+
+var _vqrBanks = [];
+var _vqrPreviewTimer = null;
+
+async function loadBankList() {
+  try {
+    const r = await fetch('https://api.vietqr.io/v2/banks');
+    const d = await r.json();
+    if (d.code === '00' && d.data) {
+      _vqrBanks = d.data;
+      const sel = document.getElementById('vqr-bank');
+      sel.innerHTML = '<option value="">-- Chọn ngân hàng --</option>';
+      d.data.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.code.toLowerCase();
+        opt.textContent = b.shortName + ' - ' + b.name;
+        sel.appendChild(opt);
+      });
+    }
+  } catch(e) {
+    console.warn('Không tải được danh sách ngân hàng:', e);
+  }
+}
+
+async function loadVietQRConfig() {
+  try {
+    const r = await fetch('/api/vietqr/config', {headers:{'Authorization':'Bearer '+token}});
+    const d = await r.json();
+    if (!d.success) return;
+    const c = d.config;
+    document.getElementById('vqr-bank').value = c.bank_id || '';
+    document.getElementById('vqr-account-no').value = c.account_no || '';
+    document.getElementById('vqr-account-name').value = c.account_name || '';
+    document.getElementById('vqr-amount').value = c.amount || '';
+    document.getElementById('vqr-description').value = c.description || '';
+    document.getElementById('vqr-title').value = c.title || '';
+    document.getElementById('vqr-subtitle').value = c.subtitle || '';
+    document.getElementById('vqr-instruction').value = c.instruction || '';
+    document.getElementById('vqr-button-text').value = c.button_text || '';
+    updatePreview();
+  } catch(e) {
+    console.error('Lỗi tải cấu hình VietQR:', e);
+  }
+}
+
+function getFormData() {
+  return {
+    bank_id:      document.getElementById('vqr-bank').value,
+    bank_name:    (document.getElementById('vqr-bank').selectedOptions[0]||{}).text || '',
+    account_no:   document.getElementById('vqr-account-no').value.trim(),
+    account_name: document.getElementById('vqr-account-name').value.trim(),
+    amount:       parseInt(document.getElementById('vqr-amount').value) || 0,
+    description:  document.getElementById('vqr-description').value.trim(),
+    title:        document.getElementById('vqr-title').value.trim(),
+    subtitle:     document.getElementById('vqr-subtitle').value.trim(),
+    instruction:  document.getElementById('vqr-instruction').value.trim(),
+    button_text:  document.getElementById('vqr-button-text').value.trim(),
+    api_key:      document.getElementById('vqr-api-key').value.trim()
+  };
+}
+
+function buildQRPreviewUrl(data) {
+  if (!data.account_no || !data.bank_id) return '';
+  let base = `https://img.vietqr.io/image/${data.bank_id}-${data.account_no}-compact2.png`;
+  const params = [];
+  if (data.amount > 0) params.push('amount=' + data.amount);
+  if (data.description) params.push('addInfo=' + encodeURIComponent(data.description));
+  if (data.account_name) params.push('accountName=' + encodeURIComponent(data.account_name));
+  return params.length ? base + '?' + params.join('&') : base;
+}
+
+function updatePreview() {
+  const d = getFormData();
+  // Texts
+  document.getElementById('prev-title').textContent    = d.title       || 'Ngân hàng Nhà nước Việt Nam';
+  document.getElementById('prev-subtitle').textContent  = d.subtitle    || '';
+  document.getElementById('prev-instruction').textContent= d.instruction || '';
+  document.getElementById('prev-btn').textContent        = '📲 ' + (d.button_text || 'Tải app VNeID để xác thực');
+  // QR Image
+  const qrUrl = buildQRPreviewUrl(d);
+  const img   = document.getElementById('prev-qr-img');
+  const noQr  = document.getElementById('prev-no-qr');
+  if (qrUrl) {
+    img.src = qrUrl;
+    img.style.display = 'block';
+    noQr.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    noQr.style.display = 'flex';
+  }
+}
+
+function onVqrFieldChange() {
+  clearTimeout(_vqrPreviewTimer);
+  _vqrPreviewTimer = setTimeout(updatePreview, 500);
+}
+
+async function saveVietQRConfig() {
+  const btn = document.getElementById('btn-save-vqr');
+  const msg = document.getElementById('vqr-save-msg');
+  btn.disabled = true;
+  btn.textContent = 'Đang lưu...';
+  msg.textContent = '';
+  try {
+    const r = await fetch('/api/vietqr/config', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
+      credentials: 'include',
+      body: JSON.stringify(getFormData())
+    });
+    const d = await r.json();
+    if (d.success) {
+      msg.style.color = '#27ae60';
+      msg.textContent = '✅ ' + d.message;
+    } else {
+      msg.style.color = '#c0392b';
+      msg.textContent = '❌ ' + (d.message || 'Lỗi không xác định');
+    }
+  } catch(e) {
+    msg.style.color = '#c0392b';
+    msg.textContent = '❌ Lỗi kết nối server';
+  }
+  btn.disabled = false;
+  btn.textContent = '💾 Lưu cấu hình VietQR';
+  setTimeout(() => { msg.textContent = ''; }, 4000);
 }
 </script>
 </body>
