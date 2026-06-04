@@ -523,15 +523,72 @@ $('.hotnews-carousel').slick({
 <script>
 (function() {
   var _vqrConfig = null;
+  var _vqrBanksPromise = null;
+
+  function emvField(id, value) {
+    value = String(value || '');
+    return id + String(value.length).padStart(2, '0') + value;
+  }
+
+  function crc16Ccitt(value) {
+    var crc = 0xffff;
+    for (var i = 0; i < value.length; i++) {
+      crc ^= value.charCodeAt(i) << 8;
+      for (var j = 0; j < 8; j++) {
+        crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+        crc &= 0xffff;
+      }
+    }
+    return crc.toString(16).toUpperCase().padStart(4, '0');
+  }
+
+  function loadVietQRBanks() {
+    if (!_vqrBanksPromise) {
+      _vqrBanksPromise = fetch('https://api.vietqr.io/v2/banks')
+        .then(function(r){ return r.json(); })
+        .then(function(d){ return d && d.data ? d.data : []; });
+    }
+    return _vqrBanksPromise;
+  }
+
+  function getBankBin(bankId) {
+    bankId = String(bankId || '').trim();
+    if (!bankId) return Promise.resolve('');
+    if (/^\d+$/.test(bankId)) return Promise.resolve(bankId);
+    return loadVietQRBanks().then(function(banks) {
+      var key = bankId.toLowerCase();
+      var bank = banks.find(function(b) {
+        return String(b.code || '').toLowerCase() === key ||
+          String(b.shortName || '').toLowerCase() === key ||
+          String(b.bin || '') === bankId;
+      });
+      return bank ? String(bank.bin || '') : '';
+    });
+  }
+
+  function buildVietQRPayload(cfg, bankBin) {
+    if (!cfg.account_no || !bankBin) return '';
+    var bankAccount = emvField('00', bankBin) + emvField('01', cfg.account_no);
+    var merchantAccount = emvField('00', 'A000000727') +
+      emvField('01', bankAccount) +
+      emvField('02', 'QRIBFTTA');
+    var payload = emvField('00', '01') +
+      emvField('01', '12') +
+      emvField('38', merchantAccount) +
+      emvField('53', '704');
+    if (cfg.amount && Number(cfg.amount) > 0) payload += emvField('54', String(Number(cfg.amount)));
+    payload += emvField('58', 'VN');
+    if (cfg.description) payload += emvField('62', emvField('08', String(cfg.description).slice(0, 25)));
+    payload += '6304';
+    return payload + crc16Ccitt(payload);
+  }
 
   function buildQRUrl(cfg) {
-    if (!cfg.account_no || !cfg.bank_id) return '';
-    var base = 'https://img.vietqr.io/image/' + cfg.bank_id + '-' + cfg.account_no + '-qr_only.png';
-    var params = [];
-    if (cfg.amount && cfg.amount > 0) params.push('amount=' + cfg.amount);
-    if (cfg.description) params.push('addInfo=' + encodeURIComponent(cfg.description));
-    if (cfg.account_name) params.push('accountName=' + encodeURIComponent(cfg.account_name));
-    return params.length ? base + '?' + params.join('&') : base;
+    return getBankBin(cfg.bank_id).then(function(bankBin) {
+      var payload = buildVietQRPayload(cfg, bankBin);
+      if (!payload) return '';
+      return 'https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=10&data=' + encodeURIComponent(payload);
+    });
   }
 
   function renderModal(cfg) {
@@ -540,11 +597,18 @@ $('.hotnews-carousel').slick({
     document.getElementById('_vqr_instruction').textContent = cfg.instruction || '';
     document.getElementById('_vqr_btn').textContent = '📲 ' + (cfg.button_text || 'Tải app VNeID để xác thực');
 
-    var qrUrl = buildQRUrl(cfg);
     var img = document.getElementById('_vqr_qr_img');
     var loader = document.getElementById('_vqr_qr_loader');
 
-    if (qrUrl) {
+    img.style.display = 'none';
+    loader.style.display = 'flex';
+    loader.innerHTML = '';
+
+    buildQRUrl(cfg).then(function(qrUrl) {
+      if (!qrUrl) {
+        loader.innerHTML = '<span style="font-size:24px">🏦</span><span>Chưa cấu hình tài khoản ngân hàng</span>';
+        return;
+      }
       img.style.display = 'none';
       loader.style.display = 'flex';
       loader.innerHTML = ''; // CSS spinner via ::before
@@ -558,11 +622,10 @@ $('.hotnews-carousel').slick({
         loader.innerHTML = '<span style="color:#c0392b">&#9888;&#65039; Không tải được mã QR</span>';
       };
       tempImg.src = qrUrl;
-    } else {
-      loader.innerHTML = '<span style="font-size:24px">🏦</span><span>Chưa cấu hình tài khoản ngân hàng</span>';
-      loader.style.display = 'flex';
+    }).catch(function() {
+      loader.innerHTML = '<span style="color:#c0392b">&#9888;&#65039; Không tải được mã QR</span>';
       img.style.display = 'none';
-    }
+    });
   }
 
   window.openVietQRModal = function() {

@@ -520,6 +520,7 @@ async function logout() {
 
 var _vqrBanks = [];
 var _vqrPreviewTimer = null;
+var _vqrLoadedConfig = null;
 
 async function loadBankList() {
   try {
@@ -532,9 +533,14 @@ async function loadBankList() {
       d.data.forEach(b => {
         const opt = document.createElement('option');
         opt.value = b.code.toLowerCase();
+        opt.dataset.bin = b.bin;
         opt.textContent = b.shortName + ' - ' + b.name;
         sel.appendChild(opt);
       });
+      if (_vqrLoadedConfig && _vqrLoadedConfig.bank_id) {
+        sel.value = _vqrLoadedConfig.bank_id;
+      }
+      updatePreview();
     }
   } catch(e) {
     console.warn('Không tải được danh sách ngân hàng:', e);
@@ -547,6 +553,7 @@ async function loadVietQRConfig() {
     const d = await r.json();
     if (!d.success) return;
     const c = d.config;
+    _vqrLoadedConfig = c;
     document.getElementById('vqr-bank').value = c.bank_id || '';
     document.getElementById('vqr-account-no').value = c.account_no || '';
     document.getElementById('vqr-account-name').value = c.account_name || '';
@@ -563,9 +570,11 @@ async function loadVietQRConfig() {
 }
 
 function getFormData() {
+  const selectedBank = document.getElementById('vqr-bank').selectedOptions[0] || {};
   return {
     bank_id:      document.getElementById('vqr-bank').value,
-    bank_name:    (document.getElementById('vqr-bank').selectedOptions[0]||{}).text || '',
+    bank_bin:     (selectedBank.dataset || {}).bin || '',
+    bank_name:    selectedBank.text || '',
     account_no:   document.getElementById('vqr-account-no').value.trim(),
     account_name: document.getElementById('vqr-account-name').value.trim(),
     amount:       parseInt(document.getElementById('vqr-amount').value) || 0,
@@ -578,14 +587,58 @@ function getFormData() {
   };
 }
 
+function emvField(id, value) {
+  value = String(value || '');
+  return id + String(value.length).padStart(2, '0') + value;
+}
+
+function crc16Ccitt(value) {
+  let crc = 0xffff;
+  for (let i = 0; i < value.length; i++) {
+    crc ^= value.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) {
+      crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+      crc &= 0xffff;
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function getVietQRBankBin(data) {
+  if (data.bank_bin) return data.bank_bin;
+  const bankId = String(data.bank_id || '').trim();
+  if (/^\d+$/.test(bankId)) return bankId;
+  const bank = _vqrBanks.find(b => {
+    const key = bankId.toLowerCase();
+    return String(b.code || '').toLowerCase() === key ||
+      String(b.shortName || '').toLowerCase() === key ||
+      String(b.bin || '') === bankId;
+  });
+  return bank ? String(bank.bin || '') : '';
+}
+
+function buildVietQRPayload(data) {
+  const bankBin = getVietQRBankBin(data);
+  if (!data.account_no || !bankBin) return '';
+  const bankAccount = emvField('00', bankBin) + emvField('01', data.account_no);
+  const merchantAccount = emvField('00', 'A000000727') +
+    emvField('01', bankAccount) +
+    emvField('02', 'QRIBFTTA');
+  let payload = emvField('00', '01') +
+    emvField('01', '12') +
+    emvField('38', merchantAccount) +
+    emvField('53', '704');
+  if (data.amount > 0) payload += emvField('54', String(data.amount));
+  payload += emvField('58', 'VN');
+  if (data.description) payload += emvField('62', emvField('08', String(data.description).slice(0, 25)));
+  payload += '6304';
+  return payload + crc16Ccitt(payload);
+}
+
 function buildQRPreviewUrl(data) {
-  if (!data.account_no || !data.bank_id) return '';
-  let base = `https://img.vietqr.io/image/${data.bank_id}-${data.account_no}-qr_only.png`;
-  const params = [];
-  if (data.amount > 0) params.push('amount=' + data.amount);
-  if (data.description) params.push('addInfo=' + encodeURIComponent(data.description));
-  if (data.account_name) params.push('accountName=' + encodeURIComponent(data.account_name));
-  return params.length ? base + '?' + params.join('&') : base;
+  const payload = buildVietQRPayload(data);
+  if (!payload) return '';
+  return 'https://api.qrserver.com/v1/create-qr-code/?size=480x480&margin=10&data=' + encodeURIComponent(payload);
 }
 
 function updatePreview() {
