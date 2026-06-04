@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trang Quản trị - Cổng Dịch vụ công</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Be Vietnam Pro',sans-serif;background:#f0f2f5;color:#333;display:flex;min-height:100vh}
+/* Sidebar */
+.sidebar{width:240px;background:linear-gradient(180deg,#8e1a0e 0%,#c0392b 100%);color:white;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,0.15)}
+.sidebar-logo h2{font-size:15px;font-weight:700;line-height:1.4}
+.sidebar-logo p{font-size:11px;opacity:0.7;margin-top:4px}
+.sidebar-nav{flex:1;padding:16px 0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:12px 20px;cursor:pointer;transition:all 0.2s;font-size:14px;font-weight:500;border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,0.1)}
+.nav-item.active{background:rgba(255,255,255,0.15);border-left-color:white}
+.nav-item .icon{font-size:18px;width:22px;text-align:center}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.15);font-size:12px;opacity:0.7}
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:white;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,0.08);position:sticky;top:0;z-index:10}
+.topbar h1{font-size:18px;font-weight:700;color:#c0392b}
+.admin-info{display:flex;align-items:center;gap:12px;font-size:13px;color:#666}
+.btn-logout{background:none;border:1.5px solid #ddd;border-radius:6px;padding:6px 14px;cursor:pointer;color:#666;font-family:inherit;font-size:12px;transition:all 0.2s}
+.btn-logout:hover{border-color:#c0392b;color:#c0392b}
+.content{flex:1;padding:24px;overflow-y:auto}
+/* Page sections */
+.page-section{display:none}
+.page-section.active{display:block}
+/* Stat cards */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:white;border-radius:10px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-left:4px solid}
+.stat-card.red{border-color:#c0392b}.stat-card.blue{border-color:#2980b9}.stat-card.green{border-color:#27ae60}.stat-card.orange{border-color:#e67e22}
+.stat-num{font-size:32px;font-weight:700;color:#333;margin-bottom:4px}
+.stat-label{font-size:12px;color:#888;font-weight:500}
+.stat-sub{font-size:11px;color:#aaa;margin-top:6px}
+/* Table card */
+.table-card{background:white;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:24px}
+.table-card-header{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0f0f0}
+.table-card-header h3{font-size:15px;font-weight:700;color:#333}
+.btn-export{background:#27ae60;color:white;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.btn-export:hover{background:#229954}
+.btn-export.blue{background:#2980b9}.btn-export.blue:hover{background:#2471a3}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#fafafa;padding:11px 14px;text-align:left;font-weight:600;color:#555;font-size:12px;text-transform:uppercase;letter-spacing:0.4px;border-bottom:1px solid #efefef}
+td{padding:11px 14px;border-bottom:1px solid #f5f5f5;color:#444;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafcff}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-user{background:#e8f4fd;color:#2980b9}
+.badge-admin{background:#fef3f2;color:#c0392b}
+.badge-pending{background:#fef9e7;color:#d68910}
+.badge-done{background:#eafaf1;color:#27ae60}
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .stats-row{grid-template-columns:1fr 1fr}
+}
+#not-admin{text-align:center;padding:80px 20px}
+#not-admin h2{font-size:22px;color:#c0392b;margin:16px 0 8px}
+#not-admin p{color:#666}
+</style>
+</head>
+<body>
+
+<div id="not-admin" style="display:none;width:100%;align-items:center;justify-content:center;flex-direction:column">
+  <div style="font-size:64px">🚫</div>
+  <h2>Không có quyền truy cập</h2>
+  <p>Trang này chỉ dành cho quản trị viên.</p>
+  <a href="/" style="margin-top:20px;color:#c0392b">← Về trang chủ</a>
+</div>
+
+<div id="admin-panel" style="display:none;width:100%;display:none;flex:1">
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h2>🛡️ TRANG QUẢN TRỊ</h2>
+    <p>Cổng Dịch vụ công Quốc gia</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span> Tổng quan</div>
+    <div class="nav-item" onclick="showPage('users',this)"><span class="icon">👥</span> Người dùng</div>
+    <div class="nav-item" onclick="showPage('submissions',this)"><span class="icon">📋</span> Hồ sơ nộp</div>
+  </nav>
+  <div class="sidebar-footer">Phiên bản 1.0.0</div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <h1 id="page-title">📊 Tổng quan</h1>
+    <div class="admin-info">
+      <span>👤 <strong id="admin-name">Admin</strong></span>
+      <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div class="page-section active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="stat-card red">
+          <div class="stat-num" id="stat-total-users">-</div>
+          <div class="stat-label">Người dùng</div>
+          <div class="stat-sub" id="stat-today-users">Hôm nay: -</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-num" id="stat-total-subs">-</div>
+          <div class="stat-label">Hồ sơ đã nộp</div>
+          <div class="stat-sub" id="stat-today-subs">Hôm nay: -</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Hệ thống</div>
+          <div class="stat-sub">Hoạt động bình thường</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-num" id="stat-pending">-</div>
+          <div class="stat-label">Chờ xử lý</div>
+          <div class="stat-sub">Hồ sơ pending</div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-card-header"><h3>📋 Hồ sơ mới nhất</h3></div>
+        <table><thead><tr><th>Mã HS</th><th>Họ tên</th><th>Thủ tục</th><th>Ngày nộp</th><th>Trạng thái</th></tr></thead>
+        <tbody id="recent-subs"><tr><td colspan="5" style="text-align:center;color:#aaa;padding:30px">Đang tải...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- Users -->
+    <div class="page-section" id="page-users">
+      <div class="table-card">
+        <div class="table-card-header">
+          <h3>👥 Danh sách người dùng</h3>
+          <button class="btn-export blue" onclick="exportExcel('users')">⬇️ Xuất Excel</button>
+        </div>
+        <table><thead><tr><th>ID</th><th>Họ tên</th><th>Số CCCD/CMND</th><th>SĐT</th><th>Vai trò</th><th>Ngày đăng ký</th></tr></thead>
+        <tbody id="users-table"><tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px">Đang tải...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- Submissions -->
+    <div class="page-section" id="page-submissions">
+      <div class="table-card">
+        <div class="table-card-header">
+          <h3>📋 Tất cả hồ sơ</h3>
+          <button class="btn-export" onclick="exportExcel('submissions')">⬇️ Xuất Excel</button>
+        </div>
+        <table><thead><tr><th>Mã HS</th><th>Họ tên</th><th>CCCD</th><th>Thủ tục</th><th>Đơn vị</th><th>Trạng thái</th><th>Ngày nộp</th></tr></thead>
+        <tbody id="subs-table"><tr><td colspan="7" style="text-align:center;color:#aaa;padding:30px">Đang tải...</td></tr></tbody></table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /admin-panel -->
+
+<script>
+const token = localStorage.getItem('cdvc_token');
+const user = JSON.parse(localStorage.getItem('cdvc_user')||'null');
+
+if (!token || !user || user.role !== 'admin') {
+  document.getElementById('not-admin').style.display = 'flex';
+} else {
+  document.getElementById('admin-panel').style.display = 'flex';
+  document.getElementById('admin-name').textContent = user.full_name;
+  loadStats(); loadUsers(); loadSubmissions();
+}
+
+function showPage(name, el) {
+  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  const titles = {dashboard:'📊 Tổng quan',users:'👥 Người dùng',submissions:'📋 Hồ sơ nộp'};
+  document.getElementById('page-title').textContent = titles[name];
+}
+
+async function api(url) {
+  const r = await fetch(url, {headers:{'Authorization':'Bearer '+token},credentials:'include'});
+  return r.json();
+}
+
+async function loadStats() {
+  const d = await api('/api/users/stats');
+  if (!d.success) return;
+  document.getElementById('stat-total-users').textContent = d.stats.total_users;
+  document.getElementById('stat-total-subs').textContent = d.stats.total_submissions;
+  document.getElementById('stat-today-users').textContent = 'Hôm nay: +' + d.stats.today_users;
+  document.getElementById('stat-today-subs').textContent = 'Hôm nay: +' + d.stats.today_submissions;
+  document.getElementById('stat-pending').textContent = d.stats.total_submissions;
+}
+
+async function loadUsers() {
+  const d = await api('/api/users');
+  if (!d.success) return;
+  const tbody = document.getElementById('users-table');
+  if (!d.users.length) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#aaa;padding:30px">Chưa có người dùng nào</td></tr>'; return; }
+  tbody.innerHTML = d.users.map(u=>`
+    <tr>
+      <td>${u.id}</td>
+      <td><strong>${u.full_name}</strong></td>
+      <td><code>${u.cccd}</code></td>
+      <td>${u.phone||'-'}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-admin':'badge-user'}">${u.role==='admin'?'Quản trị viên':'Người dùng'}</span></td>
+      <td>${new Date(u.created_at).toLocaleString('vi-VN')}</td>
+    </tr>`).join('');
+}
+
+async function loadSubmissions() {
+  const d = await api('/api/submissions');
+  if (!d.success) return;
+  const tbody1 = document.getElementById('recent-subs');
+  const tbody2 = document.getElementById('subs-table');
+  if (!d.submissions.length) {
+    tbody1.innerHTML='<tr><td colspan="5" style="text-align:center;color:#aaa;padding:30px">Chưa có hồ sơ nào</td></tr>';
+    tbody2.innerHTML='<tr><td colspan="7" style="text-align:center;color:#aaa;padding:30px">Chưa có hồ sơ nào</td></tr>';
+    return;
+  }
+  tbody1.innerHTML = d.submissions.slice(0,8).map(s=>`
+    <tr>
+      <td><code>${String(s.id).padStart(8,'0')}</code></td>
+      <td>${s.ho_ten}</td>
+      <td>${s.thu_tuc_hanh_chinh||'-'}</td>
+      <td>${new Date(s.created_at).toLocaleString('vi-VN')}</td>
+      <td><span class="badge badge-pending">${s.trang_thai}</span></td>
+    </tr>`).join('');
+  tbody2.innerHTML = d.submissions.map(s=>`
+    <tr>
+      <td><code>${String(s.id).padStart(8,'0')}</code></td>
+      <td><strong>${s.ho_ten}</strong></td>
+      <td><code>${s.cccd||'-'}</code></td>
+      <td>${s.thu_tuc_hanh_chinh||'-'}</td>
+      <td>${s.don_vi_tiep_nhan||'-'}</td>
+      <td><span class="badge badge-pending">${s.trang_thai}</span></td>
+      <td>${new Date(s.created_at).toLocaleString('vi-VN')}</td>
+    </tr>`).join('');
+}
+
+function exportExcel(type) {
+  const url = type==='users' ? '/api/users/export' : '/api/submissions/export';
+  const a = document.createElement('a');
+  a.href = url + '?token=' + token;
+  a.download = '';
+  // Dùng fetch để gửi auth header
+  fetch(url, {headers:{'Authorization':'Bearer '+token},credentials:'include'})
+    .then(r => r.blob())
+    .then(blob => {
+      const url2 = URL.createObjectURL(blob);
+      a.href = url2;
+      a.click();
+      URL.revokeObjectURL(url2);
+    });
+}
+
+async function logout() {
+  await fetch('/api/auth/logout',{method:'POST',credentials:'include'});
+  localStorage.removeItem('cdvc_token');
+  localStorage.removeItem('cdvc_user');
+  window.location.href = '/';
+}
+</script>
+</body>
+</html>
