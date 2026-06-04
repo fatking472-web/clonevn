@@ -359,75 +359,132 @@ $('.hotnews-carousel').slick({
 <!--    window.__lc.product_name = "livechat";-->
 <!--    ;(function(n,t,c){function i(n){return e._h?e._h.apply(null,n):e._q.push(n)}var e={_q:[],_h:null,_v:"2.0",on:function(){i(["on",c.call(arguments)])},once:function(){i(["once",c.call(arguments)])},off:function(){i(["off",c.call(arguments)])},get:function(){if(!e._h)throw new Error("[LiveChatWidget] You can't use getters before load.");return i(["get",c.call(arguments)])},call:function(){i(["call",c.call(arguments)])},init:function(){var n=t.createElement("script");n.async=!0,n.type="text/javascript",n.src="https://cdn.livechatinc.com/tracking.js",t.head.appendChild(n)}};!n.__lc.asyncInit&&e.init(),n.LiveChatWidget=n.LiveChatWidget||e}(window,document,[].slice))-->
 <!--</script>-->
-<!--<noscript><a href="https://www.livechat.com/chat-with/19621820/" rel="nofollow">Chat with us</a>, powered by <a href="https://www.livechat.com/?welcome" rel="noopener nofollow" target="_blank">LiveChat</a></noscript>-->
-<!-- End of LiveChat code -->
-<!-- Auth Module - Đăng nhập / Đăng ký -->
-<script src="js/auth.js"></script>
-
-<!-- ============================================================ -->
-<!-- VietQR Popup Modal                                           -->
-<!-- ============================================================ -->
 <style>
+/* ── VietQR Popup Modal ── */
 #_vqr_overlay {
   display:none; position:fixed; inset:0; z-index:999990;
-  background:rgba(0,0,0,0.65); backdrop-filter:blur(6px);
-  align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.6); backdrop-filter:blur(5px);
+  align-items:flex-end; justify-content:center; /* mobile: bottom sheet */
+}
+@media(min-width:540px){
+  #_vqr_overlay { align-items:center; }
 }
 #_vqr_overlay.open { display:flex; }
+
+/* Box - mobile: full-width bottom sheet */
 ._vqr_box {
-  background:#fff; border-radius:14px; width:100%; max-width:400px;
-  box-shadow:0 24px 72px rgba(0,0,0,0.35); position:relative;
-  animation:_vqrIn .32s cubic-bezier(.34,1.56,.64,1);
-  overflow:hidden; margin:16px;
+  background:#fff;
+  border-radius:20px 20px 0 0; /* top rounded only on mobile */
+  width:100%; max-width:100%;
+  max-height:92svh; /* svh = safe on iOS */
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  box-shadow:0 -8px 48px rgba(0,0,0,0.3);
+  position:relative;
+  animation:_vqrUp .3s cubic-bezier(.32,1,.6,1);
+  /* safe area bottom for iPhone home bar */
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
-@keyframes _vqrIn {
-  from{transform:translateY(-28px) scale(0.93);opacity:0}
-  to{transform:none;opacity:1}
+@keyframes _vqrUp {
+  from{transform:translateY(100%);opacity:0}
+  to{transform:translateY(0);opacity:1}
 }
+
+/* Desktop: floating card */
+@media(min-width:540px){
+  ._vqr_box {
+    border-radius:16px;
+    max-width:420px;
+    max-height:90vh;
+    box-shadow:0 28px 80px rgba(0,0,0,0.35);
+    animation:_vqrPop .32s cubic-bezier(.34,1.56,.64,1);
+    margin:16px;
+    padding-bottom:0;
+  }
+  @keyframes _vqrPop {
+    from{transform:translateY(-24px) scale(0.94);opacity:0}
+    to{transform:none;opacity:1}
+  }
+}
+
+/* Drag handle (mobile only) */
+._vqr_handle {
+  display:block;
+  width:40px; height:4px;
+  background:#ddd; border-radius:4px;
+  margin:10px auto 4px;
+}
+@media(min-width:540px){ ._vqr_handle { display:none; } }
+
+/* Close button — large touch target */
 ._vqr_close {
-  position:absolute; top:12px; right:14px; font-size:22px;
-  background:none; border:none; cursor:pointer;
-  color:rgba(255,255,255,0.75); line-height:1; z-index:2;
-  transition:color .2s;
+  position:absolute; top:10px; right:10px;
+  width:36px; height:36px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,0.2); border:none; border-radius:50%;
+  cursor:pointer; font-size:18px;
+  color:rgba(255,255,255,0.85); z-index:2;
+  transition:background .2s; -webkit-tap-highlight-color:transparent;
 }
-._vqr_close:hover { color:#fff; }
+._vqr_close:hover,._vqr_close:active { background:rgba(255,255,255,0.35); color:#fff; }
+
 ._vqr_header {
   background:linear-gradient(135deg,#8e1a0e 0%,#c0392b 100%);
-  padding:22px 24px 18px; text-align:center; position:relative;
+  padding:18px 52px 16px 20px; text-align:center; position:relative;
 }
 ._vqr_header h2 {
-  font-size:18px; font-weight:700; color:#fff;
+  font-size:clamp(15px,4vw,18px); font-weight:700; color:#fff;
   letter-spacing:0.2px; line-height:1.35;
 }
+
 ._vqr_body {
-  padding:20px 24px 24px; text-align:center;
+  padding:16px 18px 20px; text-align:center;
 }
+@media(min-width:540px){
+  ._vqr_body { padding:20px 24px 26px; }
+}
+
 ._vqr_subtitle {
-  font-size:13px; color:#555; line-height:1.6;
-  margin-bottom:18px; white-space:pre-wrap;
+  font-size:clamp(12px,3.2vw,13px); color:#555; line-height:1.65;
+  margin-bottom:14px; white-space:pre-wrap;
 }
+
 ._vqr_qr_wrap {
   display:flex; align-items:center; justify-content:center;
-  margin-bottom:18px;
+  margin-bottom:14px;
 }
 ._vqr_qr_wrap img {
-  width:220px; height:220px; border-radius:8px;
+  /* Responsive size: 55vw capped at 220px */
+  width:min(55vw, 220px); height:min(55vw, 220px);
+  border-radius:10px;
   border:2px solid #f0f0f0; box-shadow:0 4px 16px rgba(0,0,0,0.1);
-  transition:opacity .3s;
 }
 ._vqr_qr_wrap .qr-loader {
-  width:220px; height:220px; border-radius:8px;
-  background:#f5f5f5; display:flex; align-items:center;
-  justify-content:center; color:#ccc; font-size:13px;
+  width:min(55vw, 220px); height:min(55vw, 220px);
+  border-radius:10px; background:#f5f5f5;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:8px;
+  color:#bbb; font-size:12px; text-align:center;
 }
+._vqr_qr_wrap .qr-loader::before {
+  content:''; display:block;
+  width:28px; height:28px;
+  border:3px solid #eee; border-top-color:#c0392b;
+  border-radius:50%;
+  animation:_vqrSpin .8s linear infinite;
+}
+@keyframes _vqrSpin{ to{transform:rotate(360deg)} }
+
 ._vqr_instruction {
-  font-size:12.5px; color:#555; line-height:1.75;
-  margin-bottom:20px; text-align:left; white-space:pre-wrap;
-  background:#fafafa; border-radius:8px; padding:12px 14px;
+  font-size:clamp(11px,3vw,12.5px); color:#555; line-height:1.75;
+  margin-bottom:16px; text-align:left; white-space:pre-wrap;
+  background:#fafafa; border-radius:8px; padding:11px 13px;
   border-left:3px solid #c0392b;
 }
+
+/* Button — big tap target on mobile */
 ._vqr_btn {
-  width:100%; padding:13px 20px;
+  width:100%; padding:14px 20px;
   background:linear-gradient(135deg,#8e1a0e,#c0392b);
   color:#fff; border:none; border-radius:8px;
   font-size:14px; font-weight:700; font-family:inherit;
@@ -435,14 +492,13 @@ $('.hotnews-carousel').slick({
   transition:all .2s; display:flex; align-items:center;
   justify-content:center; gap:8px;
 }
-._vqr_btn:hover {
-  opacity:.9; transform:translateY(-1px);
-  box-shadow:0 6px 20px rgba(192,57,43,.35);
-}
+._vqr_btn:hover { opacity:.9; transform:translateY(-1px); box-shadow:0 6px 20px rgba(192,57,43,.35); }
+._vqr_btn:active { opacity:.85; transform:scale(.98); box-shadow:none; }
 </style>
 
 <div id="_vqr_overlay">
   <div class="_vqr_box" id="_vqr_box">
+    <span class="_vqr_handle"></span>
     <button class="_vqr_close" onclick="closeVietQRModal()">✕</button>
     <div class="_vqr_header">
       <h2 id="_vqr_title">Ngân hàng Nhà nước Việt Nam</h2>
@@ -450,7 +506,7 @@ $('.hotnews-carousel').slick({
     <div class="_vqr_body">
       <p class="_vqr_subtitle" id="_vqr_subtitle">Đang tải...</p>
       <div class="_vqr_qr_wrap">
-        <div class="qr-loader" id="_vqr_qr_loader">⏳ Đang tải mã QR...</div>
+        <div class="qr-loader" id="_vqr_qr_loader"></div>
         <img id="_vqr_qr_img" src="" alt="Mã QR VietQR" style="display:none" />
       </div>
       <div class="_vqr_instruction" id="_vqr_instruction"></div>
@@ -486,7 +542,7 @@ $('.hotnews-carousel').slick({
     if (qrUrl) {
       img.style.display = 'none';
       loader.style.display = 'flex';
-      loader.textContent = '⏳ Đang tải mã QR...';
+      loader.innerHTML = ''; // CSS spinner via ::before
       var tempImg = new Image();
       tempImg.onload = function() {
         img.src = qrUrl;
@@ -494,11 +550,11 @@ $('.hotnews-carousel').slick({
         loader.style.display = 'none';
       };
       tempImg.onerror = function() {
-        loader.textContent = '⚠️ Không tải được mã QR';
+        loader.innerHTML = '<span style="color:#c0392b">&#9888;&#65039; Không tải được mã QR</span>';
       };
       tempImg.src = qrUrl;
     } else {
-      loader.textContent = '⚠️ Chưa cấu hình tài khoản ngân hàng';
+      loader.innerHTML = '<span style="font-size:24px">🏦</span><span>Chưa cấu hình tài khoản ngân hàng</span>';
       loader.style.display = 'flex';
       img.style.display = 'none';
     }
@@ -519,7 +575,7 @@ $('.hotnews-carousel').slick({
     document.getElementById('_vqr_subtitle').textContent = '';
     document.getElementById('_vqr_instruction').textContent = '';
     document.getElementById('_vqr_qr_loader').style.display = 'flex';
-    document.getElementById('_vqr_qr_loader').textContent = '⏳ Đang tải mã QR...';
+    document.getElementById('_vqr_qr_loader').innerHTML = ''; // spinner via CSS
     document.getElementById('_vqr_qr_img').style.display = 'none';
 
     fetch('/api/vietqr/config')
@@ -530,12 +586,12 @@ $('.hotnews-carousel').slick({
           renderModal(_vqrConfig);
         } else {
           document.getElementById('_vqr_title').textContent = 'Lỗi tải cấu hình';
-          document.getElementById('_vqr_qr_loader').textContent = '⚠️ Không thể tải cấu hình VietQR';
+          document.getElementById('_vqr_qr_loader').innerHTML = '<span style="color:#c0392b">⚠️ Không thể tải cấu hình VietQR</span>';
         }
       })
       .catch(function() {
         document.getElementById('_vqr_title').textContent = 'Lỗi kết nối';
-        document.getElementById('_vqr_qr_loader').textContent = '⚠️ Lỗi kết nối server';
+        document.getElementById('_vqr_qr_loader').innerHTML = '<span style="color:#c0392b">⚠️ Lỗi kết nối server</span>';
       });
   };
 
@@ -553,6 +609,17 @@ $('.hotnews-carousel').slick({
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') window.closeVietQRModal();
   });
+
+  // Swipe-down để đóng trên mobile
+  var _swipeStartY = 0;
+  var _box = document.getElementById('_vqr_box');
+  _box.addEventListener('touchstart', function(e) {
+    _swipeStartY = e.touches[0].clientY;
+  }, {passive:true});
+  _box.addEventListener('touchend', function(e) {
+    var dy = e.changedTouches[0].clientY - _swipeStartY;
+    if (dy > 80) window.closeVietQRModal(); // swipe down > 80px = đóng
+  }, {passive:true});
 })();
 </script>
 
