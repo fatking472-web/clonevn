@@ -74,7 +74,7 @@ const AuthUI = {
     const userName = document.getElementById('_username');
     const btnAdmin = document.getElementById('_btn_admin');
     // Các nút Đăng nhập/Đăng ký gốc trong HTML trang chủ
-    const nativeBtnLogins = document.querySelectorAll('.btn-login, .btn-white[href="/login"], a[href="/login"]');
+    const nativeBtnLogins = document.querySelectorAll('.btn-login, .btn-white, a[href="/login"]');
     const nativeBtnRegs = document.querySelectorAll('.btn-register');
     if (Auth.isLoggedIn()) {
       const u = Auth.getUser();
@@ -83,16 +83,33 @@ const AuthUI = {
       if(userInfo) userInfo.style.display='flex';
       if(userName) userName.textContent = u.full_name || u.cccd;
       if(btnAdmin) btnAdmin.style.display = u.role==='admin' ? 'inline-flex' : 'none';
-      // Ẩn nút Đăng nhập/Đăng ký gốc trong HTML
-      nativeBtnLogins.forEach(el => el.style.display='none');
-      nativeBtnRegs.forEach(el => el.style.display='none');
+      // Ẩn nút Đăng nhập/Đăng ký gốc trong HTML (kể cả wrapper div cha)
+      nativeBtnLogins.forEach(el => {
+        el.style.display='none';
+        // Ẩn luôn div wrapper cha nếu nó chỉ chứa mỗi nút này
+        if(el.parentElement && el.parentElement.children.length === 1) {
+          el.parentElement.style.display='none';
+        }
+      });
+      nativeBtnRegs.forEach(el => {
+        el.style.display='none';
+        if(el.parentElement && el.parentElement.children.length === 1) {
+          el.parentElement.style.display='none';
+        }
+      });
     } else {
       if(btnLogin) btnLogin.style.display='';
       if(btnReg) btnReg.style.display='';
       if(userInfo) userInfo.style.display='none';
       // Hiện lại nút gốc khi chưa đăng nhập
-      nativeBtnLogins.forEach(el => el.style.display='');
-      nativeBtnRegs.forEach(el => el.style.display='');
+      nativeBtnLogins.forEach(el => {
+        el.style.display='';
+        if(el.parentElement) el.parentElement.style.display='';
+      });
+      nativeBtnRegs.forEach(el => {
+        el.style.display='';
+        if(el.parentElement) el.parentElement.style.display='';
+      });
     }
   },
   async handleLogin(e) {
