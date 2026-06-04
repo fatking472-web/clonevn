@@ -104,11 +104,14 @@ router.post('/sepay', (req, res) => {
 
 // ========================
 // GET /api/webhook/test
-// Dùng để test bot Telegram có hoạt động không (chỉ dùng lúc dev)
+// Dùng để test bot Telegram có hoạt động không
 // ========================
 router.get('/test', (req, res) => {
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ success: false });
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (!token || !chatId || token === 'your_bot_token_here' || chatId === 'your_chat_id_here') {
+    return res.json({ success: false, message: 'Chưa cấu hình Bot Token hoặc Chat ID. Vui lòng lưu cấu hình trước!' });
   }
 
   sendTelegramMessage([
@@ -118,7 +121,7 @@ router.get('/test', (req, res) => {
     `🕐 Thời gian: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`
   ].join('\n'));
 
-  return res.json({ success: true, message: 'Đã gửi tin nhắn test đến Telegram' });
+  return res.json({ success: true, message: 'Đã gửi tin nhắn test đến Telegram! Kiểm tra app Telegram của bạn.' });
 });
 
 module.exports = router;
