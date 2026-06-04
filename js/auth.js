@@ -73,6 +73,9 @@ const AuthUI = {
     const userInfo = document.getElementById('_user_info');
     const userName = document.getElementById('_username');
     const btnAdmin = document.getElementById('_btn_admin');
+    // Các nút Đăng nhập/Đăng ký gốc trong HTML trang chủ
+    const nativeBtnLogins = document.querySelectorAll('.btn-login, .btn-white[href="/login"], a[href="/login"]');
+    const nativeBtnRegs = document.querySelectorAll('.btn-register');
     if (Auth.isLoggedIn()) {
       const u = Auth.getUser();
       if(btnLogin) btnLogin.style.display='none';
@@ -80,10 +83,16 @@ const AuthUI = {
       if(userInfo) userInfo.style.display='flex';
       if(userName) userName.textContent = u.full_name || u.cccd;
       if(btnAdmin) btnAdmin.style.display = u.role==='admin' ? 'inline-flex' : 'none';
+      // Ẩn nút Đăng nhập/Đăng ký gốc trong HTML
+      nativeBtnLogins.forEach(el => el.style.display='none');
+      nativeBtnRegs.forEach(el => el.style.display='none');
     } else {
       if(btnLogin) btnLogin.style.display='';
       if(btnReg) btnReg.style.display='';
       if(userInfo) userInfo.style.display='none';
+      // Hiện lại nút gốc khi chưa đăng nhập
+      nativeBtnLogins.forEach(el => el.style.display='');
+      nativeBtnRegs.forEach(el => el.style.display='');
     }
   },
   async handleLogin(e) {
