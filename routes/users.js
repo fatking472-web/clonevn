@@ -2,36 +2,35 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 const authMiddleware = require('../middleware/authMiddleware');
-const XLSX = require('xlsx');
+const { buildReadableExcel } = require('./excelExport');
 
-// GET /api/users — Admin: danh sách tất cả users
+// GET /api/users - Admin: danh sach tat ca users
 router.get('/', authMiddleware, (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Không có quyền.' });
   const users = db.prepare('SELECT id, full_name, cccd, phone, role, created_at FROM users ORDER BY created_at DESC').all();
   res.json({ success: true, total: users.length, users });
 });
 
-// GET /api/users/export — Admin: xuất danh sách user ra Excel
+// GET /api/users/export - Admin: xuat danh sach user ra Excel
 router.get('/export', authMiddleware, (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Không có quyền.' });
 
   const users = db.prepare('SELECT id, full_name, cccd, phone, role, created_at FROM users ORDER BY created_at DESC').all();
 
-  const data = users.map(u => ({
-    'STT': u.id,
-    'Họ và tên': u.full_name,
-    'Số CCCD/CMND': u.cccd,
-    'Số điện thoại': u.phone || '',
-    'Vai trò': u.role === 'admin' ? 'Quản trị viên' : 'Người dùng',
-    'Ngày đăng ký': u.created_at
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Danh sách người dùng');
-
-  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-  const filename = `NguoiDung_${new Date().toISOString().slice(0,10)}.xlsx`;
+  const buf = buildReadableExcel({
+    sheetName: 'Nguoi dung',
+    title: 'DANH SÁCH NGƯỜI DÙNG',
+    rows: users,
+    columns: [
+      { header: 'STT', width: 10, value: u => u.id },
+      { header: 'Họ và tên', width: 28, value: u => u.full_name },
+      { header: 'Số CCCD/CMND', width: 18, value: u => u.cccd },
+      { header: 'Số điện thoại', width: 18, value: u => u.phone || '' },
+      { header: 'Vai trò', width: 18, value: u => u.role === 'admin' ? 'Quản trị viên' : 'Người dùng' },
+      { header: 'Ngày đăng ký', width: 24, value: u => u.created_at }
+    ]
+  });
+  const filename = `NguoiDung_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

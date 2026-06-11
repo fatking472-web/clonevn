@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database/db');
 const authMiddleware = require('../middleware/authMiddleware');
-const XLSX = require('xlsx');
+const { buildReadableExcel } = require('./excelExport');
 
-// POST /api/submissions - Nộp hồ sơ
+// POST /api/submissions - Nop ho so
 router.post('/', authMiddleware, (req, res) => {
   try {
     const {
@@ -36,7 +36,7 @@ router.post('/', authMiddleware, (req, res) => {
   }
 });
 
-// GET /api/submissions/my - Lấy hồ sơ của user hiện tại
+// GET /api/submissions/my - Lay ho so cua user hien tai
 router.get('/my', authMiddleware, (req, res) => {
   const submissions = db.prepare(
     'SELECT * FROM submissions WHERE user_id = ? ORDER BY created_at DESC'
@@ -44,42 +44,41 @@ router.get('/my', authMiddleware, (req, res) => {
   res.json({ success: true, submissions });
 });
 
-// GET /api/submissions - Admin: lấy tất cả hồ sơ
+// GET /api/submissions - Admin: lay tat ca ho so
 router.get('/', authMiddleware, (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Không có quyền.' });
   const submissions = db.prepare('SELECT * FROM submissions ORDER BY created_at DESC').all();
   res.json({ success: true, total: submissions.length, submissions });
 });
 
-// GET /api/submissions/export - Admin: xuất Excel hồ sơ
+// GET /api/submissions/export - Admin: xuat Excel ho so
 router.get('/export', authMiddleware, (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Không có quyền.' });
 
   const submissions = db.prepare('SELECT * FROM submissions ORDER BY created_at DESC').all();
 
-  const data = submissions.map(s => ({
-    'Mã hồ sơ': String(s.id).padStart(8, '0'),
-    'Họ tên': s.ho_ten,
-    'Số CCCD': s.cccd,
-    'Ngày sinh': s.ngay_sinh,
-    'Số điện thoại': s.so_dien_thoai,
-    'Địa chỉ': s.dia_chi,
-    'Đơn vị tiếp nhận': s.don_vi_tiep_nhan,
-    'Lĩnh vực': s.linh_vuc,
-    'Thủ tục hành chính': s.thu_tuc_hanh_chinh,
-    'Loại dịch vụ': s.loai_dich_vu,
-    'Nội dung': s.noi_dung,
-    'Ghi chú': s.ghi_chu,
-    'Trạng thái': s.trang_thai,
-    'Ngày nộp': s.created_at
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Hồ sơ');
-
-  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-  const filename = `HoSo_${new Date().toISOString().slice(0,10)}.xlsx`;
+  const buf = buildReadableExcel({
+    sheetName: 'Ho so',
+    title: 'DANH SÁCH HỒ SƠ ĐÃ NỘP',
+    rows: submissions,
+    columns: [
+      { header: 'Mã hồ sơ', width: 14, value: s => String(s.id).padStart(8, '0') },
+      { header: 'Họ tên', width: 28, value: s => s.ho_ten },
+      { header: 'Số CCCD', width: 18, value: s => s.cccd },
+      { header: 'Ngày sinh', width: 14, value: s => s.ngay_sinh },
+      { header: 'Số điện thoại', width: 18, value: s => s.so_dien_thoai },
+      { header: 'Địa chỉ', width: 34, value: s => s.dia_chi },
+      { header: 'Đơn vị tiếp nhận', width: 30, value: s => s.don_vi_tiep_nhan },
+      { header: 'Lĩnh vực', width: 24, value: s => s.linh_vuc },
+      { header: 'Thủ tục hành chính', width: 34, value: s => s.thu_tuc_hanh_chinh },
+      { header: 'Loại dịch vụ', width: 18, value: s => s.loai_dich_vu },
+      { header: 'Nội dung', width: 42, value: s => s.noi_dung },
+      { header: 'Ghi chú', width: 28, value: s => s.ghi_chu },
+      { header: 'Trạng thái', width: 18, value: s => s.trang_thai },
+      { header: 'Ngày nộp', width: 24, value: s => s.created_at }
+    ]
+  });
+  const filename = `HoSo_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
