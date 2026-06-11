@@ -41,7 +41,7 @@ router.get('/export', authMiddleware, (req, res) => {
 // GET /api/users/stats
 router.get('/stats', authMiddleware, (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ success: false, message: 'Không có quyền.' });
-  const total_users = db.prepare('SELECT COUNT(*) as c FROM users WHERE role != "admin"').get().c;
+  const total_users = db.prepare("SELECT COUNT(*) as c FROM users WHERE role != 'admin'").get().c;
   const total_submissions = db.prepare('SELECT COUNT(*) as c FROM submissions').get().c;
   const today_users = db.prepare("SELECT COUNT(*) as c FROM users WHERE DATE(created_at) = DATE('now') AND role != 'admin'").get().c;
   const today_submissions = db.prepare("SELECT COUNT(*) as c FROM submissions WHERE DATE(created_at) = DATE('now')").get().c;
